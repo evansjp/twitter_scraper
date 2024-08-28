@@ -53,7 +53,7 @@ def hash_tweet_content(tweet_text):
 
 def twitter_login(driver, username, password):
     driver.get('https://twitter.com/login')
-    time.sleep(5)  # Wait for the page to load
+    time.sleep(10)  # Wait for the page to load
 
     # Enter the username
     username_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[4]/label/div/div[2]/div/input'
@@ -64,7 +64,7 @@ def twitter_login(driver, username, password):
     next_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/button[2]'
     next_button = driver.find_element(By.XPATH, next_button_xpath)
     next_button.click()
-    time.sleep(2)  # Wait for the password field to load
+    time.sleep(5)  # Wait for the password field to load
 
     # Enter the password
     password_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input'
@@ -122,7 +122,7 @@ def scroll_and_collect(driver, screenshots_folder, account, max_tweets=5):
 
                 if tweet_top_position < 0 or tweet_bottom_position > window_height:
                     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", tweet_div)
-                    time.sleep(1)  # Wait a moment for the tweet to scroll and settle
+                    time.sleep(2)  # Wait a moment for the tweet to scroll and settle
 
                 # Capture the screenshot
                 screenshot = tweet_div.screenshot_as_png
@@ -142,7 +142,7 @@ def scroll_and_collect(driver, screenshots_folder, account, max_tweets=5):
 
         # Scroll down by a smaller amount to load more tweets
         driver.execute_script("window.scrollBy(0, window.innerHeight / 2);")
-        time.sleep(2)
+        time.sleep(4)
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
             print("Reached the end of the page.")
@@ -170,7 +170,7 @@ def main():
 
         for account in accounts_to_scrape:
             driver.get(f'https://twitter.com/{account}')
-            time.sleep(5)
+            time.sleep(10)
             scroll_and_collect(driver, screenshots_folder, account, max_tweets=5)
 
     except Exception as e:
