@@ -83,7 +83,7 @@ def upload_post(account_id, timestamp, content, image_data, hash_value):
     response = requests.post(url, files=files, data=data, headers={})
     print(response.json())
 
-def twitter_login(driver, username, password):
+def twitter_login(driver, username, email, password):
     driver.get('https://twitter.com/login')
     time.sleep(5)  # Wait for the page to load
 
@@ -97,6 +97,24 @@ def twitter_login(driver, username, password):
     next_button = driver.find_element(By.XPATH, next_button_xpath)
     next_button.click()
     time.sleep(2)  # Wait for the password field to load
+
+    # Check if the email field appears
+    try:
+        email_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div[2]/label/div/div[2]/div/input'
+        email_input = driver.find_element(By.XPATH, email_input_xpath)
+        # If found, enter the email
+        email_input.send_keys(email)
+        
+        # Click the "Next" button after entering the email
+        email_next_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/button'
+        email_next_button = driver.find_element(By.XPATH, email_next_button_xpath)
+        email_next_button.click()
+        
+        time.sleep(2)  # Wait for the password field to load
+    
+    except NoSuchElementException:
+        # Email input not found, proceed to password input directly
+        pass
 
     # Enter the password
     password_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input'
@@ -223,7 +241,7 @@ def main():
         scraper_encryption_key = '2c2e24fa373b10a1e8a64a90ff3d53c55c553581f8bfa9b181f55ad0304609ca'
 
         # Get scraper credentials
-        username, password = get_scraper_credentials(cursor, scraper_encryption_key)
+        username, email, password = get_scraper_credentials(cursor, scraper_encryption_key)
 
         print(f'username: {username}\npassword: {password}')
 
@@ -231,7 +249,7 @@ def main():
         accounts_to_scrape = get_accounts_to_scrape(cursor)
 
         # Log into Twitter
-        twitter_login(driver, username, password)
+        twitter_login(driver, username, email, password)
 
         for account in accounts_to_scrape:
             driver.get(f'https://twitter.com/{account}')
