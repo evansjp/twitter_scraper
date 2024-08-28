@@ -1,2 +1,6 @@
 psycopg2
 cryptography
+selenium
+webdriver_manager
+numpy
+pandas

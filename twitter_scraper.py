@@ -19,7 +19,7 @@ import requests
 # from PIL import Image
 
 DB_NAME='prydwen_analytica_api_development'
-DB_USER='john-paul'
+DB_USER='postgres'
 DB_PASSWORD = 'Maryann1'
 DB_HOST='localhost'
 
@@ -215,26 +215,12 @@ def main():
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-    # try:
-    #     twitter_login(driver)
-    #     driver.get(f'https://twitter.com/{ACCOUNTS_TO_SCRAPE[0]}')
-    #     time.sleep(5)
-    #     tweets = scroll_and_collect(driver, max_tweets=10)
-    #     df = pd.DataFrame(tweets)
-    #     print(df)
-    #     # df.to_csv('tweets.csv', index=False)
-    #     # print('Tweets have been saved to tweets.csv')
-    # except Exception as e:
-    #     print(f'An error occurred: {e}')
-    # finally:
-    #     driver.quit()
-
     try:
         # Connect to the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        scraper_encryption_key = '50f307c466007ff5eb581a4a930488d9'
+        scraper_encryption_key = '2c2e24fa373b10a1e8a64a90ff3d53c55c553581f8bfa9b181f55ad0304609ca'
 
         # Get scraper credentials
         username, password = get_scraper_credentials(cursor, scraper_encryption_key)
