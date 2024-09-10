@@ -6,7 +6,7 @@ import psycopg2
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, StaleElementReferenceException
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,7 +18,7 @@ from datetime import datetime
 import requests
 # from PIL import Image
 
-DB_NAME='prydwen_analytica_api_development'
+DB_NAME='prydwen_analytica_api_production'
 DB_USER='postgres'
 DB_PASSWORD = 'Maryann1'
 DB_HOST='localhost'
@@ -72,35 +72,35 @@ def get_accounts_to_scrape(cursor, user_id):
 def save_post(account_id, timestamp, content, image_data, hash_value):
     """Uploads the post along with the image to the Rails API."""
 
-    # # Define the API endpoint
-    # url = 'http://localhost:3000/api/v1/posts'
+    # Define the API endpoint
+    url = 'http://localhost:3000/api/v1/posts'
     
-    # # Prepare the files payload. Send the image as a file (multipart/form-data).
-    # files = {'post[image]': ('screenshot.png', image_data, 'image/png')}
+    # Prepare the files payload. Send the image as a file (multipart/form-data).
+    files = {'post[image]': ('screenshot.png', image_data, 'image/png')}
     
-    # # Prepare the data payload for the post (account ID, timestamp, content, etc.)
-    # data = {
-    #     'post[account_id]': int(account_id),
-    #     'post[timestamp]': timestamp,
-    #     'post[content]': content,
-    #     'post[post_hash]': hash_value
-    # }
+    # Prepare the data payload for the post (account ID, timestamp, content, etc.)
+    data = {
+        'post[account_id]': int(account_id),
+        'post[timestamp]': timestamp,
+        'post[content]': content,
+        'post[post_hash]': hash_value
+    }
 
-    # headers = {
-    #     'X-Api-Key': '6217ef56a56e1fda195656a0391ce252be87ac8f3aa0e571'
-    # }
+    headers = {
+        'X-Api-Key': '6217ef56a56e1fda195656a0391ce252be87ac8f3aa0e571'
+    }
 
-    # # Make a POST request to the API
-    # response = requests.post(url, files=files, data=data, headers=headers)
+    # Make a POST request to the API
+    response = requests.post(url, files=files, data=data, headers=headers)
 
-    # # Print the response from the server for debugging
-    # if response.status_code == 201:
-    #     print(f"Post with hash {hash_value} successfully uploaded.")
-    # else:
-    #     print(f"Failed to upload post with hash {hash_value}. Status code: {response.status_code}")
-    #     print(response.json())
+    # Print the response from the server for debugging
+    if response.status_code == 201:
+        # print(f"Post with hash {hash_value} successfully uploaded.")
+        pass
+    else:
+        print(f"Failed to upload post with hash {hash_value}. Status code: {response.status_code}")
+        print(response.json())
 
-    print(f"Post with hash {hash_value} successfully uploaded.")
 
 # def upload_post(account_id, timestamp, content, image_data, hash_value):
 #     url = 'http://localhost:4000/api/v1/posts'
@@ -199,7 +199,7 @@ def scroll_and_collect(driver, account_id, cursor, max_tweets=5):
         else:
             scroll_attempts = 0  # Reset the counter if new tweets are found
 
-        print(f"Found {len(tweet_divs)} tweets on this scroll.")
+        # print(f"Found {len(tweet_divs)} tweets on this scroll.")
 
         # Process only new tweets loaded after the last scroll
         for tweet_div in tweet_divs[previous_tweet_count:]:
@@ -219,20 +219,20 @@ def scroll_and_collect(driver, account_id, cursor, max_tweets=5):
 
                 # Check if this tweet has already been scraped in this session
                 if tweet_hash in scraped_hashes:
-                    print(f"Tweet with hash {tweet_hash} already processed in this session. Skipping...")
+                    # print(f"Tweet with hash {tweet_hash} already processed in this session. Skipping...")
                     continue
 
                 # Check if the tweet with this hash already exists in the database
                 cursor.execute("SELECT 1 FROM Posts WHERE post_hash = %s LIMIT 1;", (tweet_hash,))
                 if cursor.fetchone():
-                    print(f"Tweet with hash {tweet_hash} already exists. Skipping...")
+                    # print(f"Tweet with hash {tweet_hash} already exists. Skipping...")
                     continue
 
                 # If the tweet is new, capture the screenshot & time of tweet
                 screenshot = tweet_div.screenshot_as_png
                 timestamp = tweet_div.find_element(By.XPATH, './/time').get_attribute('datetime')
 
-                print(f"Tweet {len(tweets_data) + 1}: {content}")
+                # print(f"Tweet {len(tweets_data) + 1}: {content}")
 
                 tweets_data.append({
                     'account_id': account_id,
@@ -252,7 +252,7 @@ def scroll_and_collect(driver, account_id, cursor, max_tweets=5):
                 continue
 
             except StaleElementReferenceException:
-                print("Encountered a stale element reference. Refetching tweets...")
+                # print("Encountered a stale element reference. Refetching tweets...")
                 break  # Refetch tweets in the next loop iteration
 
         previous_tweet_count = len(tweet_divs)  # Update the tweet count after processing new tweets
@@ -264,7 +264,7 @@ def scroll_and_collect(driver, account_id, cursor, max_tweets=5):
         # Check if new tweets are loaded
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
-            print("Reached the end of the page or no new tweets loaded.")
+            # print("Reached the end of the page or no new tweets loaded.")
             break
         last_height = new_height
 
@@ -295,9 +295,9 @@ def hash_tweet_content(tweet_text):
 
 def main():
     chrome_options = Options()
-    # chrome_options.add_argument('--headless')  # Run in headless mode
-    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--headless')  # Run in headless mode
     chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-gpu')
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
@@ -313,7 +313,6 @@ def main():
 
         # Iterate through each user
         for user_id in user_ids:
-            print(f"Processing for user_id: {user_id}")
 
             # Get scraper credentials for this user
             username, email, password = get_scraper_credentials(cursor, scraper_encryption_key, user_id)
@@ -321,8 +320,6 @@ def main():
             if not username or not password:
                 print(f"Skipping user_id {user_id}, missing credentials.")
                 continue
-
-            print(f'username: {username}')
 
             # Get accounts to scrape for this user
             accounts_to_scrape = get_accounts_to_scrape(cursor, user_id)
