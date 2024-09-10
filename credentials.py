@@ -25,12 +25,12 @@ def decrypt_password(encrypted_password, encryption_key):
 
     return decrypted_password.decode('utf-8')
 
-def get_scraper_credentials(cursor, decryption_key):
-    """Fetch the scraper username, email, and password from the database and decrypt the password."""
-    cursor.execute("SELECT username, email, encrypted_password FROM scraper_accounts WHERE user_id = 1 LIMIT 1;")
-    username, email, encrypted_password = cursor.fetchone()
-
-    # Decrypt the password
-    decrypted_password = decrypt_password(encrypted_password, decryption_key)
-
-    return username, email, decrypted_password
+def get_scraper_credentials(cursor, decryption_key, user_id):
+    """Fetch the scraper credentials for a specific user."""
+    cursor.execute("SELECT username, email, encrypted_password FROM scraper_accounts WHERE user_id = %s LIMIT 1;", (user_id,))
+    credentials = cursor.fetchone()
+    if credentials:
+        username, email, encrypted_password = credentials
+        password = decrypt_password(encrypted_password, decryption_key)
+        return username, email, password
+    return None, None, None
