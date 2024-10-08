@@ -121,50 +121,76 @@ def save_post(account_id, timestamp, content, image_data, hash_value):
 #     response = requests.post(url, files=files, data=data, headers={})
 #     print(response.json())
 
-def twitter_login(driver, username, email, password):
-    driver.get('https://twitter.com/login')
-    time.sleep(5)  # Wait for the page to load
+def twitter_login(driver, username, email, password, retries=10):
+    for attempt in range(retries):
+        try:
+            
+            # Open Twitter login page
+            driver.get('https://twitter.com/login')
+            time.sleep(5)  # Wait for the page to load
 
-    # Enter the username
-    username_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[4]/label/div/div[2]/div/input'
-    username_input = driver.find_element(By.XPATH, username_input_xpath)
-    username_input.send_keys(username)
-    
-    # Click the "Next" button
-    next_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/button[2]'
-    next_button = driver.find_element(By.XPATH, next_button_xpath)
-    next_button.click()
-    time.sleep(2)  # Wait for the password field to load
+            # Enter the username
+            username_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[4]/label/div/div[2]/div/input'
+            username_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, username_input_xpath))
+            )
+            username_input.send_keys(username)
 
-    # Check if the email field appears
-    try:
-        email_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div[2]/label/div/div[2]/div/input'
-        email_input = driver.find_element(By.XPATH, email_input_xpath)
-        # If found, enter the email
-        email_input.send_keys(email)
-        
-        # Click the "Next" button after entering the email
-        email_next_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/button'
-        email_next_button = driver.find_element(By.XPATH, email_next_button_xpath)
-        email_next_button.click()
-        
-        time.sleep(2)  # Wait for the password field to load
-    
-    except NoSuchElementException:
-        # Email input not found, proceed to password input directly
-        pass
+            # Click the "Next" button
+            next_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/button[2]'
+            next_button = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, next_button_xpath))
+            )
+            next_button.click()
+            time.sleep(5)  # Wait for the password field to load
 
-    # Enter the password
-    password_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input'
-    password_input = driver.find_element(By.XPATH, password_input_xpath)
-    password_input.send_keys(password)
-    
-    # Click the "Log In" button
-    login_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/button'
-    login_button = driver.find_element(By.XPATH, login_button_xpath)
-    login_button.click()
-    
-    time.sleep(5)  # Wait for the home page to load after logging in
+            # Check if the email field appears
+            try:
+                email_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div[2]/label/div/div[2]/div/input'
+                email_input = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, email_input_xpath))
+                )
+                email_input.send_keys(email)
+
+                # Click the "Next" button after entering the email
+                email_next_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/button'
+                email_next_button = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, email_next_button_xpath))
+                )
+                email_next_button.click()
+                time.sleep(5)  # Wait for the password field to load
+            except TimeoutException:
+                # No email field, continue with the password
+                pass
+
+            # Enter the password
+            password_input_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input'
+            password_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, password_input_xpath))
+            )
+            password_input.send_keys(password)
+
+            # Click the "Log In" button
+            login_button_xpath = '/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/button'
+            login_button = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, login_button_xpath))
+            )
+            login_button.click()
+
+            time.sleep(5)  # Wait for the home page to load after logging in
+
+            # If login succeeds, break out of the loop
+            # print("Login successful.")
+            break
+
+        except (NoSuchElementException, TimeoutException) as e:
+            print(f"Error during login attempt {attempt + 1}: {str(e)}")
+            if attempt == retries - 1:
+                print("Max retries reached. Login failed.")
+            else:
+                time.sleep(5)  # Wait a bit before retrying
+
+
 
 
 def scroll_and_collect(driver, account_id, cursor, max_tweets=5):
@@ -211,7 +237,7 @@ def scroll_and_collect(driver, account_id, cursor, max_tweets=5):
 
                 if tweet_top_position < 0 or tweet_bottom_position > window_height:
                     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", tweet_div)
-                    time.sleep(1)  # Wait a moment for the tweet to scroll and settle
+                    time.sleep(2)  # Wait a moment for the tweet to scroll and settle
 
                 # Extract tweet content and hash
                 content = extract_tweet_text(tweet_div)
@@ -259,7 +285,7 @@ def scroll_and_collect(driver, account_id, cursor, max_tweets=5):
 
         # Scroll down to load more tweets
         driver.execute_script("window.scrollBy(0, window.innerHeight);")
-        time.sleep(3)  # Increase the wait time to ensure new tweets are loaded
+        time.sleep(4)  # Increase the wait time to ensure new tweets are loaded
         
         # Check if new tweets are loaded
         new_height = driver.execute_script("return document.body.scrollHeight")
@@ -295,7 +321,7 @@ def hash_tweet_content(tweet_text):
 
 def main():
     chrome_options = Options()
-    chrome_options.add_argument('--headless')  # Run in headless mode
+    # chrome_options.add_argument('--headless')  # Uncomment for headless mode
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-gpu')
 
@@ -331,15 +357,22 @@ def main():
             # Log into Twitter for this user
             twitter_login(driver, username, email, password)
 
+            # Process all accounts for this user
             for account in accounts_to_scrape:
+                print(f"Processing account: {account} for user_id {user_id}")
+                
+                # Visit the Twitter account page
                 driver.get(f'https://twitter.com/{account}')
-                time.sleep(5)
+                time.sleep(5)  # Adjust this to wait for the page to load
 
+                # Fetch the account ID from the database
                 cursor.execute("SELECT id FROM Accounts WHERE account = %s AND user_id = %s LIMIT 1;", (account, user_id))
                 account_id = cursor.fetchone()[0]
 
+                # Collect tweets for the current account
                 tweets = scroll_and_collect(driver, account_id, cursor, max_tweets=10)
 
+                # Save the tweets to the database
                 for tweet in tweets:
                     save_post(tweet['account_id'], tweet['timestamp'], tweet['content'], tweet['image'], tweet['hash'])
 
